@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8" />
+        <title> Wander </title>
+
+        <script type="text/javascript" src="phaser.min.js"></script>
+
+
+               <!-- LIBS-->
+        <script src="../scripts/jq.min.js"></script>
+
+        <!-- UTILS-->
+        <script src="../scripts/utils/movementUtils.js"></script>
+
+        <!-- BASE OBJS -->
+        <script src="../scripts/objs/entity.js"></script>
+        <script src="../scripts/objs/boid.js"></script>
+        <script src="../scripts/objs/wanderingBoid.js"></script>
+
+        <!-- BEHAVIORS -->
+        <script src="../scripts/behaviors/behavior.js"></script>
+                <script src="../scripts/behaviors/behaviorWander.js"></script>
+
+        <!-- GAME OBJS-->
+        <script src="../scripts/objs/wanderingShip.js"></script>
+
+    </head>
+
+    <body>
+        
+        <script type="text/javascript">
+            
+                var game = new Phaser.Game(1200, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update});
+
+                var numBoids = 1;
+                var Flock = [];
+                var Flockable = [];
+                var self = this;
+                var isDebugging = false;
+
+          function preload () {
+                game.load.image('nave', '../assets/nave.png');
+                
+                game.load.image('tierra', '../assets/tierra.jpg'); //cargamos la imagen de fondo
+                //game.load.image('bloque', '../assets/bloque.png'); //Cargamos la imagen del bloque
+
+                //game.load.spritesheet('nave','../assets/tanques.png',64,64,40); //Cargamos el sprite del tanque
+          }
+
+          function create () {
+                game.physics.startSystem(Phaser.Physics.ARCADE);//Habilitar la fisica en el juego, creo que no hace falta.
+                game.add.sprite(0,0,'tierra'); //ponemos la imagen de fondo
+                createWanderTest();
+                
+                }
+
+            function createWanderTest()
+            {
+                var boid = new WanderingShip(game);
+                boid.initalize(0,'nave');
+                var pos = new Phaser.Point(game.world.centerX, game.world.centerY);
+                var vel = new Phaser.Point(0,-10);
+                boid.create(pos,vel, 0, isDebugging);
+                boid.category = 1;
+                boid.behavior = new BehaviorWander(boid);
+                Flock.push(boid);
+                Flockable.push(boid);
+            }
+
+          function update(){
+                Flockable[0].behavior.update(Flockable);                  
+          }
+            
+        </script>
+
+    </body>
+
+</html>

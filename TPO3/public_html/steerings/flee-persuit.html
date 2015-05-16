@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8" />
+        <title> Flee & Persuit </title>
+
+        <script type="text/javascript" src="phaser.min.js"></script>
+
+
+        <!-- LIBS-->
+        <script src="../scripts/jq.min.js"></script>
+
+        <!-- UTILS-->
+        <script src="../scripts/utils/movementUtils.js"></script>
+
+        <!-- BASE OBJS -->
+        <script src="../scripts/objs/entity.js"></script>
+        <script src="../scripts/objs/boid.js"></script>
+        <script src="../scripts/objs/fleeingBoid.js"></script>
+        <script src="../scripts/objs/pursuingBoid.js"></script>
+
+        <!-- BEHAVIORS -->
+        <script src="../scripts/behaviors/behavior.js"></script>
+                <script src="../scripts/behaviors/behaviorFlee.js"></script>
+                <script src="../scripts/behaviors/behavior.js"></script>
+                <script src="../scripts/behaviors/behaviorPursue.js"></script>
+
+        <!-- GAME OBJS-->
+        <script src="../scripts/objs/fleeingShip.js"></script>
+        <script src="../scripts/objs/pursuingShip.js"></script>
+
+    </head>
+ 
+    <body>
+        <script type="text/javascript">
+            var juego = new Phaser.Game(1600, 1000, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+            var Flockable = [];
+            var isDebugging = false;
+            
+            function preload() {
+                juego.load.image('nave', '../assets/nave.png');
+                juego.load.image('tierra', '../assets/tierra.jpg'); //cargamos la imagen de fondo
+                juego.load.image('astronauta', '../assets/astronauta.png');
+            }
+            
+            function create() {
+                juego.physics.startSystem(Phaser.Physics.ARCADE);//Habilitar la fisica en el juego, creo que no hace falta.
+                juego.add.sprite(0, 0, 'tierra'); //ponemos la imagen de fondo
+                crearAlgoritmoFlee();
+            }
+            
+            function crearAlgoritmoFlee() {
+                var preditor = crearObjetoPersuit();         //objeto perseguidor
+                var prey = crearObjetoFlee(preditor);       // presa
+                preditor.updateTarget(prey);
+                prey.updateAvoidance(preditor);
+            }
+            
+            function crearObjetoPersuit() {
+                agente = new PursuingShip(juego,null);
+                agente.initalize(1,'astronauta');           //Le asocia un sprite al agente
+                 
+                var xpos = Math.floor(Math.random()*juego.world.bounds.width);  //Creamos la posición aleatoria de inicio para el agente
+                var ypos = Math.floor(Math.random()*juego.world.bounds.height);
+                var pos = new Phaser.Point(xpos,ypos);
+                var vel = new Phaser.Point(0,0);
+                agente.create(pos,vel, 0, isDebugging);
+                
+                agente.behavior = new BehaviorPursue(agente); //Le asociamos el comportamiento al agente
+                Flockable.push(agente);
+                return agente;
+            }
+            
+            function crearObjetoFlee(target)  {
+                var flee = new FleeingShip(juego,target); 
+                flee.initalize(1,'nave');                    //La asocia un sprite al agente
+                var xpos = Math.floor(Math.random()*juego.world.bounds.width);  //Creamos la posición aleatoria de inicio para el agente
+                var ypos = Math.floor(Math.random()*juego.world.bounds.height);
+                var pos = new Phaser.Point(xpos,ypos);
+                var vel = new Phaser.Point(30,20);
+                flee.create(pos,vel, 0, isDebugging);
+                
+                flee.behavior = new BehaviorFlee(flee);  //Le asociamos el comportamiente al agente
+                Flockable.push(flee);
+                return flee;
+            }
+
+            function update(){
+                for (var i = 0; i < Flockable.length; i++) {
+                    Flockable[i].behavior.update(Flockable);
+                    if(isDebugging){
+                        Flockable[i].debugUpdate();
+                    }
+                }
+            }
+            
+            function render(){
+                if(isDebugging) {
+                    for (var i = 0; i < Flockable.length; i++){
+                        Flockable[i].debugRender();
+                    }
+                }
+            }
+                
+        </script>    
+    </body>
+
+</html>

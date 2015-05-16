@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8" />
+        <title> Seek </title>
+
+        <script type="text/javascript" src="phaser.min.js"></script>
+
+
+               <!-- LIBS-->
+        <script src="../scripts/jq.min.js"></script>
+
+        <!-- UTILS-->
+        <script src="../scripts/utils/movementUtils.js"></script>
+
+        <!-- BASE OBJS -->
+        <script src="../scripts/objs/entity.js"></script>
+        <script src="../scripts/objs/boid.js"></script>
+        <script src="../scripts/objs/seekingBoid.js"></script>
+        <script src="../scripts/objs/immovable.js"></script>
+
+        <!-- BEHAVIORS -->
+        <script src="../scripts/behaviors/behavior.js"></script>
+                <script src="../scripts/behaviors/behaviorSeek.js"></script>
+                <script src="../scripts/behaviors/behavior.js"></script>
+
+        <!-- GAME OBJS-->
+        <script src="../scripts/objs/seekingShip.js"></script>
+
+    </head>
+
+    <body>
+        <script type="text/javascript">
+            
+            var juego = new Phaser.Game(1600, 1000, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+            var Flockable = [];
+            var isDebugging = false;
+            var target;
+            var buscador;
+            
+            function preload() {
+                juego.load.image('nave', '../assets/nave.png');
+                juego.load.image('tierra', '../assets/tierra.jpg'); //cargamos la imagen de fondo
+                juego.load.image('astronauta', '../assets/astronauta.png');
+            }
+
+            function create() {
+                juego.physics.startSystem(Phaser.Physics.ARCADE);//Habilitar la fisica en el juego, creo que no hace falta.
+                juego.add.sprite(0, 0, 'tierra'); //ponemos la imagen de fondo
+                crearAlgoritmoSeek();
+            }
+
+            function crearAlgoritmoSeek(){
+               target= crearAgenteTarget();
+               buscador=crearAgenteSeek(target);
+            }
+            
+            function crearAgenteTarget(){
+                var target=  new Immovable(juego);             //Creaamos el objetivoo que es estático, no se mueve
+                target.initalize(1,'nave');                    
+                var xpos = Math.floor(Math.random()*1500);     //esto es porque la nave puede quedar un poco fuera
+                var ypos = Math.floor(Math.random()*900);      // de los limites y el astronauta desorienta
+                var pos = new Phaser.Point(xpos,ypos);
+                var vel = new Phaser.Point(0, 0);
+                
+                target.create(pos, vel, 0, isDebugging);
+                target.behavior= new Behavior(target);
+                Flockable.push(target);
+                return target;
+            }
+            
+            function crearAgenteSeek(target){
+                var agente = new SeekingShip(juego,target);
+                
+                agente.initalize(1,'astronauta');
+                var xpos = Math.floor(Math.random()*juego.world.bounds.width);
+                var ypos = Math.floor(Math.random()*juego.world.bounds.height);
+                var pos = new Phaser.Point(xpos,ypos);
+                var vel = new Phaser.Point(60,50);
+                agente.create(pos,vel, 0, isDebugging);
+                
+                agente.behavior = new BehaviorSeek(agente);
+                Flockable.push(agente);
+                return agente;
+            }
+            
+            function update(){
+                 for (var i = 0; i < Flockable.length; i++){
+                    Flockable[i].behavior.update(Flockable);
+                        if(isDebugging){
+                            Flockable[i].debugUpdate();
+                        }
+                    }
+            }
+            
+            function render(){
+                if(isDebugging){
+                    for (var i = 0; i < Flockable.length; i++) {
+                        Flockable[i].debugRender();
+                    }
+                }
+            }
+
+        </script>
+
+    </body>
+
+</html>
